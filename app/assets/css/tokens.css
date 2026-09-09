@@ -1,0 +1,54 @@
+/**
+ * Design tokens
+ * Concept: "ink on paper" — a writing tool, not a SaaS dashboard.
+ * The chrome (toolbar, panels) sits on a quiet warm-grey ground;
+ * the page itself is the one bright, white surface in the UI.
+ * Accent is a deep ink-blue (fountain-pen blue), used sparingly
+ * for active/selected states — never as background wash decoration.
+ */
+:root {
+  /* Ground + surfaces */
+  --paper: #ffffff;
+  --ground: #f4f3ee;
+  --ground-raised: #ebe9e2;
+
+  /* Ink (text) */
+  --ink-900: #201f1c;
+  --ink-700: #4a4844;
+  --ink-500: #7a776f;
+  --ink-300: #a9a69c;
+
+  /* Structure */
+  --line: #dedbd1;
+  --line-strong: #c7c3b6;
+
+  /* Accent — fountain-pen ink blue */
+  --accent-700: #22375c;
+  --accent-600: #2f4b7c;
+  --accent-500: #3f63a0;
+  --accent-wash: #e7edf6;
+
+  /* Status */
+  --danger-600: #a3402e;
+  --danger-wash: #f6e8e4;
+  --success-600: #3d6b4a;
+
+  /* Type */
+  --font-ui: 'Vazirmatn Variable', 'Vazirmatn', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  /* Scale */
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+
+  --shadow-page: 0 1px 2px rgba(32, 31, 28, 0.04), 0 8px 24px -12px rgba(32, 31, 28, 0.16);
+  --shadow-float: 0 4px 16px -4px rgba(32, 31, 28, 0.22), 0 1px 3px rgba(32, 31, 28, 0.08);
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+}
