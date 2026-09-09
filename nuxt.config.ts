@@ -13,13 +13,14 @@ export default defineNuxtConfig({
   ],
   app: {
     head: {
-      htmlAttrs: { lang: 'fa', dir: 'rtl' }
+      htmlAttrs: { lang: 'fa', dir: 'rtl' },
+      title: 'Garnet TipTap',
     }
   },
   vuetify: {
     moduleOptions: {},
     vuetifyOptions: {
-      ssr: true,
+      // ssr: true,
       locale: {
         locale: 'fa',
         rtl: { fa: true }
