@@ -1,15 +1,11 @@
 import { Editor, type Content } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
-import { TextStyle } from '@tiptap/extension-text-style'
+import { TextStyle, FontSize, LineHeight } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import { FontFamily } from '@tiptap/extension-font-family'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextAlign } from '@tiptap/extension-text-align'
-import { Image } from '@tiptap/extension-image'
-import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
-import { TableHeader } from '@tiptap/extension-table-header'
-import { TableCell } from '@tiptap/extension-table-cell'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
 import { CharacterCount } from '@tiptap/extension-character-count'
 import { Placeholder } from '@tiptap/extension-placeholder'
@@ -19,8 +15,18 @@ import { Subscript } from '@tiptap/extension-subscript'
 import { Superscript } from '@tiptap/extension-superscript'
 import { Typography } from '@tiptap/extension-typography'
 import { Focus } from '@tiptap/extension-focus'
+import { Youtube } from '@tiptap/extension-youtube'
 import { createLowlight, common } from 'lowlight'
 import { SearchAndReplace } from '../tiptap-extensions/search-and-replace'
+import { Indent } from '../tiptap-extensions/indent'
+import { TextDirection } from '../tiptap-extensions/text-direction'
+import { Anchor } from '../tiptap-extensions/anchor'
+import { IframeEmbed } from '../tiptap-extensions/iframe-embed'
+import { ResizableImage } from '../tiptap-extensions/resizable-image'
+import { TableCellWithBackground, TableHeaderWithBackground } from '../tiptap-extensions/table-cell-background'
+import { TableWithProperties } from '../tiptap-extensions/table-properties'
+import { PageBreak } from '../tiptap-extensions/page-break'
+import { ColumnLayout, Column } from '../tiptap-extensions/columns-layout'
 
 export interface UseRichEditorOptions {
   content?: Content
@@ -52,15 +58,17 @@ export function useRichEditor(options: UseRichEditorOptions = {}) {
         underline: {}
       }),
       TextStyle,
+      FontSize,
+      LineHeight,
       Color,
       FontFamily,
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
-      Image.configure({ inline: false, allowBase64: true }),
-      Table.configure({ resizable: true }),
+      ResizableImage,
+      TableWithProperties.configure({ resizable: true }),
       TableRow,
-      TableHeader,
-      TableCell,
+      TableHeaderWithBackground,
+      TableCellWithBackground,
       CodeBlockLowlight.configure({ lowlight }),
       CharacterCount.configure({ limit: options.charLimit ?? null }),
       Placeholder.configure({
@@ -72,7 +80,15 @@ export function useRichEditor(options: UseRichEditorOptions = {}) {
       Superscript,
       Typography,
       Focus.configure({ className: 'has-focus', mode: 'shallowest' }),
-      SearchAndReplace
+      Youtube.configure({ nocookie: true, HTMLAttributes: { class: 'rte-embed-frame' } }),
+      SearchAndReplace,
+      Indent,
+      TextDirection,
+      Anchor,
+      IframeEmbed,
+      PageBreak,
+      ColumnLayout,
+      Column
     ],
     onUpdate: ({ editor }) => {
       options.onUpdateHtml?.(editor.getHTML())

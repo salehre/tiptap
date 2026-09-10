@@ -89,7 +89,7 @@
 }
 
 .rte-content code {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), serif;
   background: var(--ground-raised);
   border-radius: 4px;
   padding: 0.15em 0.4em;
@@ -196,4 +196,148 @@
 .rte-content .search-match-active {
   background: #f7c948;
   outline: 1px solid #b8860b;
+}
+
+/* Anchor bookmark marker - invisible in final output, shown as a subtle
+   marker only while editing so the author can find/select it */
+.rte-content .rte-anchor {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  vertical-align: middle;
+}
+.rte-content .ProseMirror .rte-anchor::before {
+  content: '\1F517';
+  display: inline-block;
+  font-size: 0.7em;
+  color: var(--accent-500);
+  opacity: 0.6;
+  margin-inline-end: 2px;
+  transform: translateY(-2px);
+}
+
+/* Video / iframe embeds (YouTube via extension, others via generic iframeEmbed) */
+.rte-content .rte-embed,
+.rte-content div[data-youtube-video] {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--ink-900);
+}
+.rte-content .rte-embed iframe,
+.rte-content div[data-youtube-video] iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.rte-content div[data-youtube-video].ProseMirror-selectednode,
+.rte-content .rte-embed.ProseMirror-selectednode {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
+/* Figure / image (non-editor render, e.g. preview dialog) */
+.rte-content figure.rte-figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rte-content figure.rte-figure[data-align='left'] { align-items: flex-start; }
+.rte-content figure.rte-figure[data-align='center'] { align-items: center; }
+.rte-content figure.rte-figure[data-align='right'] { align-items: flex-end; }
+.rte-content figure.rte-figure figcaption {
+  font-size: 0.85em;
+  color: var(--ink-500);
+  text-align: center;
+}
+
+/* Table alignment + custom border color */
+.rte-content table[data-align='left'] { margin-inline: 0 auto; }
+.rte-content table[data-align='center'] { margin-inline: auto; }
+.rte-content table[data-align='right'] { margin-inline: auto 0; }
+.rte-content table {
+  --rte-table-border: var(--line-strong);
+}
+.rte-content th,
+.rte-content td {
+  border-color: var(--rte-table-border);
+}
+
+/* Page break marker */
+.rte-content .rte-page-break {
+  position: relative;
+  height: 1px;
+  margin: var(--space-5) 0;
+  border-block-start: 2px dashed var(--ink-300);
+}
+.rte-content .rte-page-break::after {
+  content: 'پایان صفحه';
+  position: absolute;
+  inset-inline-start: 50%;
+  transform: translate(50%, -50%);
+  background: var(--paper);
+  padding-inline: 8px;
+  font-size: 11px;
+  color: var(--ink-500);
+}
+@media print {
+  .rte-content .rte-page-break {
+    border: none;
+    page-break-after: always;
+  }
+  .rte-content .rte-page-break::after {
+    content: '';
+  }
+}
+
+/* Visual aids: block outlines + paragraph end marks */
+.rte-content.show-visual-blocks .ProseMirror p,
+.rte-content.show-visual-blocks .ProseMirror h1,
+.rte-content.show-visual-blocks .ProseMirror h2,
+.rte-content.show-visual-blocks .ProseMirror h3,
+.rte-content.show-visual-blocks .ProseMirror h4,
+.rte-content.show-visual-blocks .ProseMirror blockquote,
+.rte-content.show-visual-blocks .ProseMirror li {
+  outline: 1px dashed rgba(63, 99, 160, 0.35);
+  outline-offset: 2px;
+}
+.rte-content.show-visual-chars .ProseMirror p::after {
+  content: '¶';
+  color: var(--accent-500);
+  opacity: 0.55;
+  margin-inline-start: 4px;
+  font-size: 0.85em;
+}
+
+/* Column layout grid */
+.rte-content .rte-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--rte-columns, 2), 1fr);
+  gap: var(--space-4);
+}
+.rte-content .rte-column {
+  min-width: 0;
+  border: 1px dashed transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  transition: border-color 0.12s ease;
+}
+.rte-content .ProseMirror .rte-column:hover,
+.rte-content .ProseMirror .rte-column:focus-within {
+  border-color: var(--line-strong);
+}
+.rte-content .rte-column > *:first-child { margin-block-start: 0; }
+.rte-content .rte-column .rte-figure-view,
+.rte-content .rte-column figure.rte-figure {
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .rte-content .rte-columns {
+    grid-template-columns: 1fr;
+  }
 }

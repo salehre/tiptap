@@ -29,22 +29,47 @@ import {
   Maximize2,
   Minimize2,
   Eraser,
-  TableIcon
+  TableIcon,
+  IndentIncrease,
+  IndentDecrease,
+  Languages,
+  Anchor as AnchorIcon,
+  MonitorPlay,
+  Eye,
+  Printer,
+  SquareDashedMousePointer,
+  Pilcrow,
+  SeparatorHorizontal,
+  Calculator
 } from '@lucide/vue'
 import ToolbarIconBtn from './toolbar/ToolbarIconBtn.vue'
 import ColorPickerMenu from './toolbar/ColorPickerMenu.vue'
 import TableGridPicker from './toolbar/TableGridPicker.vue'
+import EmojiMenu from './toolbar/EmojiMenu.vue'
+import SpecialCharMenu from './toolbar/SpecialCharMenu.vue'
+import InsertMenu from './toolbar/InsertMenu.vue'
+import LayoutMenu from './toolbar/LayoutMenu.vue'
 
 const props = defineProps<{
   editor: Editor
   fullscreen: boolean
   findOpen: boolean
+  showVisualBlocks: boolean
+  showVisualChars: boolean
 }>()
 
 const emit = defineEmits<{
   'open-link': []
   'open-image': []
   'open-source': []
+  'open-anchor': []
+  'open-embed': []
+  'open-preview': []
+  'open-word-count': []
+  'insert-page-break': []
+  print: []
+  'toggle-visual-blocks': []
+  'toggle-visual-chars': []
   'toggle-fullscreen': []
   'toggle-find': []
 }>()
@@ -101,6 +126,53 @@ const fontOptions = [
   { value: 'Georgia, serif', title: 'سریف' }
 ]
 
+const fontSize = computed({
+  get() {
+    return props.editor.getAttributes('textStyle').fontSize ?? ''
+  },
+  set(value: string) {
+    if (!value) props.editor.chain().focus().unsetFontSize().run()
+    else props.editor.chain().focus().setFontSize(value).run()
+  }
+})
+
+const fontSizeOptions = [
+  { value: '', title: 'اندازه' },
+  { value: '12px', title: '12' },
+  { value: '14px', title: '14' },
+  { value: '16px', title: '16' },
+  { value: '18px', title: '18' },
+  { value: '20px', title: '20' },
+  { value: '24px', title: '24' },
+  { value: '28px', title: '28' },
+  { value: '32px', title: '32' }
+]
+
+const lineHeight = computed({
+  get() {
+    return props.editor.getAttributes('textStyle').lineHeight ?? ''
+  },
+  set(value: string) {
+    if (!value) props.editor.chain().focus().unsetLineHeight().run()
+    else props.editor.chain().focus().setLineHeight(value).run()
+  }
+})
+
+const lineHeightOptions = [
+  { value: '', title: 'ارتفاع خط' },
+  { value: '1', title: '1' },
+  { value: '1.15', title: '1.15' },
+  { value: '1.5', title: '1.5' },
+  { value: '2', title: '2' },
+  { value: '2.5', title: '2.5' }
+]
+
+function toggleDirection() {
+  const current = props.editor.getAttributes('paragraph').dir || props.editor.getAttributes('heading').dir
+  if (current === 'ltr') props.editor.chain().focus().setTextDirection('rtl').run()
+  else props.editor.chain().focus().setTextDirection('ltr').run()
+}
+
 function setLink() {
   emit('open-link')
 }
@@ -145,6 +217,28 @@ function setLink() {
       hide-details
       class="block-select"
       style="width: 120px"
+    />
+    <v-select
+      v-model="fontSize"
+      :items="fontSizeOptions"
+      item-title="title"
+      item-value="value"
+      density="compact"
+      variant="plain"
+      hide-details
+      class="block-select"
+      style="width: 84px"
+    />
+    <v-select
+      v-model="lineHeight"
+      :items="lineHeightOptions"
+      item-title="title"
+      item-value="value"
+      density="compact"
+      variant="plain"
+      hide-details
+      class="block-select"
+      style="width: 96px"
     />
 
     <v-divider vertical class="mx-1 my-2" />
@@ -208,6 +302,15 @@ function setLink() {
     <ToolbarIconBtn title="تراز از دو طرف" :active="editor.isActive({ textAlign: 'justify' })" @click="editor.chain().focus().setTextAlign('justify').run()">
       <AlignJustify :size="18" />
     </ToolbarIconBtn>
+    <ToolbarIconBtn title="افزایش تورفتگی" @click="editor.chain().focus().indent().run()">
+      <IndentIncrease :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="کاهش تورفتگی" @click="editor.chain().focus().outdent().run()">
+      <IndentDecrease :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="تغییر جهت متن (راست‌به‌چپ / چپ‌به‌راست)" @click="toggleDirection">
+      <Languages :size="18" />
+    </ToolbarIconBtn>
 
     <v-divider vertical class="mx-1 my-2" />
 
@@ -238,6 +341,16 @@ function setLink() {
     <TableGridPicker @pick="(r, c) => editor.chain().focus().insertTable({ rows: r, cols: c, withHeaderRow: true }).run()">
       <TableIcon :size="18" />
     </TableGridPicker>
+    <ToolbarIconBtn title="لنگر (Anchor)" @click="emit('open-anchor')">
+      <AnchorIcon :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="جاسازی ویدیو" @click="emit('open-embed')">
+      <MonitorPlay :size="18" />
+    </ToolbarIconBtn>
+    <LayoutMenu :editor="editor" />
+    <EmojiMenu :editor="editor" />
+    <SpecialCharMenu :editor="editor" />
+    <InsertMenu :editor="editor" />
 
     <v-divider vertical class="mx-1 my-2" />
 
@@ -247,6 +360,30 @@ function setLink() {
     <ToolbarIconBtn title="کد HTML" @click="emit('open-source')">
       <CodeXml :size="18" />
     </ToolbarIconBtn>
+
+    <v-divider vertical class="mx-1 my-2" />
+
+    <ToolbarIconBtn title="پیش‌نمایش" @click="emit('open-preview')">
+      <Eye :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="چاپ" @click="emit('print')">
+      <Printer :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="نمایش کادر بلوک‌ها" :active="showVisualBlocks" @click="emit('toggle-visual-blocks')">
+      <SquareDashedMousePointer :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="نمایش نشانه‌ی پایان پاراگراف" :active="showVisualChars" @click="emit('toggle-visual-chars')">
+      <Pilcrow :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="درج پایان صفحه" @click="emit('insert-page-break')">
+      <SeparatorHorizontal :size="18" />
+    </ToolbarIconBtn>
+    <ToolbarIconBtn title="آمار سند" @click="emit('open-word-count')">
+      <Calculator :size="18" />
+    </ToolbarIconBtn>
+
+    <v-divider vertical class="mx-1 my-2" />
+
     <ToolbarIconBtn :title="fullscreen ? 'خروج از تمام‌صفحه' : 'تمام‌صفحه'" :active="fullscreen" @click="emit('toggle-fullscreen')">
       <component :is="fullscreen ? Minimize2 : Maximize2" :size="18" />
     </ToolbarIconBtn>
