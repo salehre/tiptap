@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
 import { EditorContent, type Editor } from '@tiptap/vue-3'
-import { useRichEditor } from '~/composables/useRichEditor.ts'
+import { useRichEditor } from '../../composables/useRichEditor'
 import Toolbar from './Toolbar.vue'
+import MenuBar from './MenuBar.vue'
 import StatusBar from './StatusBar.vue'
 import SelectionBubbleMenu from './SelectionBubbleMenu.vue'
 import TableBubbleMenu from './TableBubbleMenu.vue'
@@ -183,6 +184,27 @@ function printDocument() {
 
 <template>
   <v-card v-if="editor" class="rte" :class="{ 'rte-fullscreen': fullscreen }" rounded="lg" border>
+    <MenuBar
+      :editor="editor"
+      :fullscreen="fullscreen"
+      :find-open="findOpen"
+      :show-visual-blocks="showVisualBlocks"
+      :show-visual-chars="showVisualChars"
+      @open-link="openLinkDialog"
+      @open-image="imageDialogOpen = true"
+      @open-source="sourceDialogOpen = true"
+      @open-anchor="anchorDialogOpen = true"
+      @open-embed="embedDialogOpen = true"
+      @open-preview="previewDialogOpen = true"
+      @open-word-count="wordCountDialogOpen = true"
+      @open-table-properties="tablePropertiesOpen = true"
+      @insert-page-break="insertPageBreak"
+      @print="printDocument"
+      @toggle-visual-blocks="showVisualBlocks = !showVisualBlocks"
+      @toggle-visual-chars="showVisualChars = !showVisualChars"
+      @toggle-fullscreen="toggleFullscreen"
+      @toggle-find="toggleFind"
+    />
     <Toolbar
       :editor="editor"
       :fullscreen="fullscreen"
