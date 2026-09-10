@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { PREVIEW_VIEWPORTS, type PreviewViewport } from '../../../composables/usePreviewViewports'
+import { PREVIEW_VIEWPORTS, type PreviewViewport } from '~/composables/usePreviewViewports.ts'
 
 const props = defineProps<{ html: string }>()
 const emit = defineEmits<{ close: []; apply: [html: string] }>()
