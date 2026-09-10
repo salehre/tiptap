@@ -25,7 +25,7 @@ function insert(char: string) {
   <v-menu v-model="menu" :close-on-content-click="false" location="bottom">
     <template #activator="{ props: menuProps }">
       <span v-bind="menuProps">
-        <ToolbarIconBtn title="نویسه‌های خاص">
+        <ToolbarIconBtn title="کاراکترهای خاص">
           <Omega :size="17" />
         </ToolbarIconBtn>
       </span>

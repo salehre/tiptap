@@ -14,8 +14,8 @@ const readingMinutes = computed(() => Math.max(1, Math.round(words.value / 200))
 
 const rows = computed(() => [
   { label: 'کلمات', value: words.value },
-  { label: 'نویسه‌ها (با فاصله)', value: chars.value },
-  { label: 'نویسه‌ها (بدون فاصله)', value: charsNoSpaces.value },
+  { label: 'کاراکترها (با فاصله)', value: chars.value },
+  { label: 'کاراکترها (بدون فاصله)', value: charsNoSpaces.value },
   { label: 'پاراگراف‌ها', value: paragraphs.value },
   { label: 'زمان تقریبی مطالعه', value: `${readingMinutes.value} دقیقه` }
 ])
