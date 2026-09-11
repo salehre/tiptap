@@ -183,7 +183,7 @@ function printDocument() {
 </script>
 
 <template>
-  <v-card v-if="editor" class="rte" :class="{ 'rte-fullscreen': fullscreen }" rounded="lg" border>
+    <v-card v-if="editor" class="rte" :class="{ 'rte-fullscreen': fullscreen }" rounded="lg" border>
     <MenuBar
       :editor="editor"
       :fullscreen="fullscreen"
