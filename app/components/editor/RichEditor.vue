@@ -291,7 +291,7 @@ function printDocument() {
 .rte-fullscreen {
   position: fixed;
   inset: 0;
-  z-index: 2400;
+  z-index: 100;
   border-radius: 0 !important;
 }
 

@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
-defineProps<{ label: string }>()
-const menu = ref(false)
+defineProps<{ label: string; modelValue: boolean }>()
+const emit = defineEmits<{ 'update:modelValue': [boolean]; hover: [] }>()
 </script>
 
 <template>
-  <v-menu v-model="menu" location="bottom start">
+  <v-menu
+    :model-value="modelValue"
+    location="bottom start"
+    @update:model-value="(v) => emit('update:modelValue', v)"
+  >
     <template #activator="{ props: menuProps }">
-      <button type="button" class="menu-trigger" v-bind="menuProps">
+      <button
+        type="button"
+        class="menu-trigger"
+        :class="{ 'is-active': modelValue }"
+        v-bind="menuProps"
+        @mouseenter="emit('hover')"
+      >
         {{ label }}
       </button>
     </template>
 
     <v-list density="compact" min-width="220">
-      <slot :close="() => (menu = false)" />
+      <slot :close="() => emit('update:modelValue', false)" />
     </v-list>
   </v-menu>
 </template>
@@ -30,7 +38,8 @@ const menu = ref(false)
   border-radius: 4px;
   cursor: pointer;
 }
-.menu-trigger:hover {
+.menu-trigger:hover,
+.menu-trigger.is-active {
   background: rgba(0, 0, 0, 0.06);
 }
 </style>
