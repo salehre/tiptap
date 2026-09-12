@@ -27,6 +27,7 @@ import { TableCellWithBackground, TableHeaderWithBackground } from '../tiptap-ex
 import { TableWithProperties } from '../tiptap-extensions/table-properties'
 import { PageBreak } from '../tiptap-extensions/page-break'
 import { ColumnLayout, Column } from '../tiptap-extensions/columns-layout'
+import { normalizePastedHtml } from '../utils/normalizePastedHtml'
 
 export interface UseRichEditorOptions {
   content?: Content
@@ -36,17 +37,15 @@ export interface UseRichEditorOptions {
   onUpdateHtml?: (html: string) => void
 }
 
-/**
- * Builds a fully-featured Tiptap editor instance.
- * Kept separate from the UI so `RichEditor.vue` can be reused
- * anywhere and the extension set can be tuned in one place.
- */
 export function useRichEditor(options: UseRichEditorOptions = {}) {
   const lowlight = createLowlight(common)
 
   const editor = new Editor({
     editable: options.editable ?? true,
-    content: options.content ?? '',
+    content: typeof options.content === 'string' ? normalizePastedHtml(options.content) : (options.content ?? ''),
+    editorProps: {
+      transformPastedHTML: normalizePastedHtml
+    },
     extensions: [
       StarterKit.configure({
         codeBlock: false, // replaced by CodeBlockLowlight for syntax highlighting

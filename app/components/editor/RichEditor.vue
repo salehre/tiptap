@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, shallowRef, watch, onMounted, onBeforeUnmount } from 'vue'
 import { EditorContent, type Editor } from '@tiptap/vue-3'
-import { useRichEditor } from '../../composables/useRichEditor'
+import { useRichEditor } from '~/composables/useRichEditor'
 import Toolbar from './Toolbar.vue'
 import MenuBar from './MenuBar.vue'
 import StatusBar from './StatusBar.vue'
@@ -21,6 +21,7 @@ import TablePropertiesDialog from './dialogs/TablePropertiesDialog.vue'
 import ExportCodeDialog from './dialogs/ExportCodeDialog.vue'
 import { exportEditorContent, type ExportResult } from '~/utils/exportToFramework'
 import { EXPORT_OPTIONS, type ExportCss, type ExportSyntax } from '~/utils/exportTypes'
+import { normalizePastedHtml } from '~/utils/normalizePastedHtml'
 
 const props = withDefaults(
   defineProps<{
@@ -61,7 +62,7 @@ watch(
   () => props.modelValue,
   (value) => {
     if (editor.value && value !== editor.value.getHTML()) {
-      editor.value.commands.setContent(value, { emitUpdate: false })
+      editor.value.commands.setContent(normalizePastedHtml(value), { emitUpdate: false })
     }
   }
 )
@@ -126,7 +127,7 @@ function insertImage(src: string, alt: string) {
 
 // --- Source dialog ---
 function applySource(html: string) {
-  editor.value?.commands.setContent(html)
+  editor.value?.commands.setContent(normalizePastedHtml(html))
   sourceDialogOpen.value = false
 }
 
