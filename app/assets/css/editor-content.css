@@ -240,6 +240,16 @@
   outline-offset: 2px;
 }
 
+/* Raw HTML block: rendered via innerHTML, kept as-authored. Only a
+   selection outline is added so it doesn't look editable inline. */
+.rte-content div[data-html-block] {
+  cursor: default;
+}
+.rte-content div[data-html-block].ProseMirror-selectednode {
+  outline: 2px solid var(--accent-500);
+  outline-offset: 2px;
+}
+
 /* Figure / image (non-editor render, e.g. preview dialog) */
 .rte-content figure.rte-figure {
   margin: 0;

@@ -78,7 +78,7 @@ function wrapInlineStylesInSpans(el: Element): void {
         ;(el as HTMLElement).style.color = el.getAttribute('color') || ''
     }
 
-    if (tag === 'SPAN' || VOID_TAGS.has(tag) || !el.childNodes.length) return
+    if (tag === 'SPAN' || tag === 'DIV' || VOID_TAGS.has(tag) || !el.childNodes.length) return
 
     const style = (el as HTMLElement).style
     const found: Partial<Record<TextStyleProp, string>> = {}
