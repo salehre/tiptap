@@ -18,6 +18,9 @@ import EmbedDialog from './dialogs/EmbedDialog.vue'
 import PreviewDialog from './dialogs/PreviewDialog.vue'
 import WordCountDialog from './dialogs/WordCountDialog.vue'
 import TablePropertiesDialog from './dialogs/TablePropertiesDialog.vue'
+import ExportCodeDialog from './dialogs/ExportCodeDialog.vue'
+import { exportEditorContent, type ExportResult } from '~/utils/exportToFramework'
+import { EXPORT_OPTIONS, type ExportCss, type ExportSyntax } from '~/utils/exportTypes'
 
 const props = withDefaults(
   defineProps<{
@@ -80,6 +83,8 @@ const wordCountDialogOpen = ref(false)
 const tablePropertiesOpen = ref(false)
 const showVisualBlocks = ref(false)
 const showVisualChars = ref(false)
+const exportResult = ref<ExportResult | null>(null)
+const exportTitle = ref('')
 
 function toggleFullscreen() {
   fullscreen.value = !fullscreen.value
@@ -139,6 +144,15 @@ function insertYoutube(url: string) {
 function insertGenericEmbed(url: string) {
   editor.value?.commands.setIframeEmbed(url)
   embedDialogOpen.value = false
+}
+
+function handleExport(syntax: ExportSyntax, css: ExportCss) {
+  if (!editor.value) return
+  const json = editor.value.getJSON()
+  exportResult.value = exportEditorContent(json as any, syntax, css)
+  const group = EXPORT_OPTIONS.find((g) => g.syntax === syntax)
+  const opt = group?.options.find((o) => o.css === css)
+  exportTitle.value = opt ? `خروجی ${opt.label}` : 'خروجی کد'
 }
 
 // --- Table properties dialog ---
@@ -211,6 +225,7 @@ function printDocument() {
       :find-open="findOpen"
       :show-visual-blocks="showVisualBlocks"
       :show-visual-chars="showVisualChars"
+      @export="handleExport"
       @open-link="openLinkDialog"
       @open-image="imageDialogOpen = true"
       @open-source="sourceDialogOpen = true"
@@ -275,6 +290,14 @@ function printDocument() {
       @close="tablePropertiesOpen = false"
       @apply="applyTableProperties"
     />
+
+    <ExportCodeDialog
+      v-if="exportResult"
+      :result="exportResult"
+      :title="exportTitle"
+      @close="exportResult = null"
+    />
+
   </v-card>
   <v-sheet v-else class="rte-loading" border rounded="lg" :style="{ minHeight }">
     در حال بارگذاری ادیتور…

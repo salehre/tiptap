@@ -29,6 +29,8 @@ import AlignMenu from './toolbar/AlignMenu.vue'
 import ListMenu from './toolbar/ListMenu.vue'
 import InsertMoreMenu from './toolbar/InsertMoreMenu.vue'
 import PageToolsMenu from './toolbar/PageToolsMenu.vue'
+import ExportMenu from './toolbar/ExportMenu.vue'
+import type { ExportCss, ExportSyntax } from '~/utils/exportTypes'
 
 const props = defineProps<{
   editor: Editor
@@ -52,6 +54,7 @@ const emit = defineEmits<{
   'toggle-visual-chars': []
   'toggle-fullscreen': []
   'toggle-find': []
+  export: [syntax: ExportSyntax, css: ExportCss]
 }>()
 
 const TEXT_COLORS = [
@@ -195,6 +198,7 @@ function setLink() {
       @insert-page-break="emit('insert-page-break')"
       @open-word-count="emit('open-word-count')"
     />
+    <ExportMenu @export="(syntax, css) => emit('export', syntax, css)" />
 
     <v-divider vertical class="mx-1 my-2" />
 
