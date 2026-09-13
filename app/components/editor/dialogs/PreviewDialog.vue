@@ -66,6 +66,7 @@ const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
   padding: 24px !important;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
 }
 .preview-frame {
   max-width: 100%;

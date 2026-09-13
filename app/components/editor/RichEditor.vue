@@ -325,7 +325,20 @@ function printDocument() {
   padding: 24px;
   display: flex;
   justify-content: center;
+  align-items: flex-start;
   background: rgb(var(--v-theme-background));
+}
+
+/* In fullscreen the canvas takes up the whole viewport height, so the
+   document's white page must stretch to match it instead of stopping at
+   its normal min-height — otherwise the grey canvas shows through below
+   short content. The inline min-height style needs !important to lose to
+   this, since inline styles otherwise always win the cascade. */
+.rte-fullscreen .rte-canvas {
+  min-height: 0;
+}
+.rte-fullscreen .rte-page {
+  min-height: 100% !important;
 }
 
 .rte-page {

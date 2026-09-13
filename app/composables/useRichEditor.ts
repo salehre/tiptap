@@ -27,6 +27,7 @@ import { TableCellWithBackground, TableHeaderWithBackground } from '../tiptap-ex
 import { TableWithProperties } from '../tiptap-extensions/table-properties'
 import { PageBreak } from '../tiptap-extensions/page-break'
 import { ColumnLayout, Column } from '../tiptap-extensions/columns-layout'
+import { HtmlBlock } from '../tiptap-extensions/html-block'
 import { normalizePastedHtml } from '../utils/normalizePastedHtml'
 
 export interface UseRichEditorOptions {
@@ -87,7 +88,8 @@ export function useRichEditor(options: UseRichEditorOptions = {}) {
       IframeEmbed,
       PageBreak,
       ColumnLayout,
-      Column
+      Column,
+      HtmlBlock
     ],
     onUpdate: ({ editor }) => {
       options.onUpdateHtml?.(editor.getHTML())
