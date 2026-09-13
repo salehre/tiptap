@@ -60,6 +60,8 @@ const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
 .viewport-bar {
   display: flex;
   justify-content: center;
+  overflow-y: visible !important;
+  flex: 0 0 auto;
 }
 .preview-body {
   background: rgb(var(--v-theme-background));
