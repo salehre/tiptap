@@ -16,56 +16,56 @@ function toggleCaption() {
 
 <template>
   <BubbleMenu
-    :editor="props.editor"
-    :should-show="({ editor }) => editor.isActive('image')"
-    :options="{ placement: 'top' }"
-    class="img-menu"
+      :editor="props.editor"
+      :should-show="({ editor }) => editor.isActive('image')"
+      :options="{ placement: 'bottom' }"
+      class="img-menu"
   >
     <v-card elevation="8" rounded="lg" class="d-flex align-center pa-1 ga-1">
       <v-btn
-        icon size="small" density="comfortable" variant="text"
-        :color="editor.getAttributes('image').align === 'left' ? 'primary' : undefined"
-        title="چپ‌چین"
-        @click="editor.commands.setImageAlign('left')"
+          icon size="small" density="comfortable" variant="text"
+          :color="editor.getAttributes('image').align === 'left' ? 'primary' : undefined"
+          title="چپ‌چین"
+          @click="editor.commands.setImageAlign('left')"
       >
         <AlignLeft :size="16" />
       </v-btn>
       <v-btn
-        icon size="small" density="comfortable" variant="text"
-        :color="editor.getAttributes('image').align === 'center' ? 'primary' : undefined"
-        title="وسط‌چین"
-        @click="editor.commands.setImageAlign('center')"
+          icon size="small" density="comfortable" variant="text"
+          :color="editor.getAttributes('image').align === 'center' ? 'primary' : undefined"
+          title="وسط‌چین"
+          @click="editor.commands.setImageAlign('center')"
       >
         <AlignCenter :size="16" />
       </v-btn>
       <v-btn
-        icon size="small" density="comfortable" variant="text"
-        :color="editor.getAttributes('image').align === 'right' ? 'primary' : undefined"
-        title="راست‌چین"
-        @click="editor.commands.setImageAlign('right')"
+          icon size="small" density="comfortable" variant="text"
+          :color="editor.getAttributes('image').align === 'right' ? 'primary' : undefined"
+          title="راست‌چین"
+          @click="editor.commands.setImageAlign('right')"
       >
         <AlignRight :size="16" />
       </v-btn>
       <v-divider vertical class="mx-1" />
       <v-btn
-        icon size="small" density="comfortable" variant="text"
-        :color="hasCaption ? 'primary' : undefined"
-        title="زیرنویس تصویر"
-        @click="toggleCaption"
+          icon size="small" density="comfortable" variant="text"
+          :color="hasCaption ? 'primary' : undefined"
+          title="زیرنویس تصویر"
+          @click="toggleCaption"
       >
         <Captions :size="16" />
       </v-btn>
       <v-btn
-        icon size="small" density="comfortable" variant="text"
-        title="بازگشت به اندازه‌ی اصلی"
-        @click="editor.chain().focus().updateAttributes('image', { width: null }).run()"
+          icon size="small" density="comfortable" variant="text"
+          title="بازگشت به اندازه‌ی اصلی"
+          @click="editor.chain().focus().updateAttributes('image', { width: null }).run()"
       >
         <RotateCcw :size="16" />
       </v-btn>
       <v-btn
-        icon size="small" density="comfortable" variant="text" color="error"
-        title="حذف تصویر"
-        @click="editor.chain().focus().deleteSelection().run()"
+          icon size="small" density="comfortable" variant="text" color="error"
+          title="حذف تصویر"
+          @click="editor.chain().focus().deleteSelection().run()"
       >
         <Trash2 :size="16" />
       </v-btn>

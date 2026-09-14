@@ -5,7 +5,6 @@ import { NodeViewWrapper, nodeViewProps } from '@tiptap/vue-3'
 const props = defineProps(nodeViewProps)
 
 const resizing = ref(false)
-const resizeAlign = ref<string | null>(null)
 let startX = 0
 let startWidth = 0
 const resizeFrameStyle = ref<Record<string, string> | null>(null)
@@ -30,18 +29,13 @@ function startResize(side: 'left' | 'right', e: MouseEvent) {
   // cursor 1:1. A centered (or oppositely aligned) image otherwise grows
   // from both sides at once, making the drag feel inverted or "laggy".
   // We freeze the frame's *current* on-screen offset as an explicit pixel
-  // margin (rather than just flipping align-items) so switching anchor
-  // doesn't visually snap the image to a new spot the instant you grab
-  // the handle — the anchor edge simply stays exactly where it already is.
   if (rootEl && frame) {
     const rootRect = rootEl.getBoundingClientRect()
     const frameRect = frame.getBoundingClientRect()
     if (side === 'right') {
-      resizeAlign.value = 'flex-start'
-      resizeFrameStyle.value = { marginInlineStart: `${frameRect.left - rootRect.left}px` }
+      resizeFrameStyle.value = { marginLeft: `${frameRect.left - rootRect.left}px`, marginRight: 'auto' }
     } else {
-      resizeAlign.value = 'flex-end'
-      resizeFrameStyle.value = { marginInlineEnd: `${rootRect.right - frameRect.right}px` }
+      resizeFrameStyle.value = { marginRight: `${rootRect.right - frameRect.right}px`, marginLeft: 'auto' }
     }
   }
 
@@ -56,7 +50,6 @@ function startResize(side: 'left' | 'right', e: MouseEvent) {
   }
   const onUp = () => {
     resizing.value = false
-    resizeAlign.value = null
     resizeFrameStyle.value = null
     window.removeEventListener('mousemove', onMove)
     window.removeEventListener('mouseup', onUp)
@@ -76,7 +69,6 @@ function onCaptionInput(e: Event) {
       ref="wrapperEl"
       class="rte-figure-view"
       :class="[`align-${align}`, { 'is-selected': selected, 'is-resizing': resizing }]"
-      :style="resizeAlign ? { alignItems: resizeAlign } : undefined"
       as="figure"
   >
     <div class="img-frame" ref="frameEl" :style="[width ? { width: `${width}px` } : {}, resizeFrameStyle || {}]">
