@@ -15,13 +15,13 @@ function escapeAttr(value: string): string {
 function styleObjectToString(style: Record<string, string>, syntax: RenderCtx['syntax']): string {
   if (syntax === 'react') {
     const body = Object.entries(style)
-      .map(([k, v]) => `${camelCase(k)}: '${v}'`)
-      .join(', ')
+        .map(([k, v]) => `${camelCase(k)}: '${v}'`)
+        .join(', ')
     return `{{ ${body} }}`
   }
   const body = Object.entries(style)
-    .map(([k, v]) => `${kebabCase(k)}: ${v}`)
-    .join('; ')
+      .map(([k, v]) => `${kebabCase(k)}: ${v}`)
+      .join('; ')
   return `"${body}"`
 }
 
@@ -34,10 +34,10 @@ function kebabCase(prop: string): string {
 
 /** Renders a single HTML element with syntax-aware attribute names. */
 export function el(
-  tag: string,
-  attrs: Record<string, AttrValue>,
-  children: string[],
-  ctx: RenderCtx
+    tag: string,
+    attrs: Record<string, AttrValue>,
+    children: string[],
+    ctx: RenderCtx
 ): string {
   const parts: string[] = []
   for (const [rawKey, value] of Object.entries(attrs)) {
@@ -77,7 +77,7 @@ export function comment(value: string, ctx: RenderCtx): string {
 export function indentBlock(code: string, spaces: number): string {
   const pad = ' '.repeat(spaces)
   return code
-    .split('\n')
-    .map((line) => (line.length ? pad + line : line))
-    .join('\n')
+      .split('\n')
+      .map((line) => (line.length ? pad + line : line))
+      .join('\n')
 }

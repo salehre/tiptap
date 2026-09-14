@@ -7,6 +7,7 @@ const props = defineProps(nodeViewProps)
 const resizing = ref(false)
 let startX = 0
 let startWidth = 0
+let maxWidth = Infinity
 const resizeFrameStyle = ref<Record<string, string> | null>(null)
 
 const wrapperEl = ref<{ $el: HTMLElement } | null>(null)
@@ -29,9 +30,16 @@ function startResize(side: 'left' | 'right', e: MouseEvent) {
   // cursor 1:1. A centered (or oppositely aligned) image otherwise grows
   // from both sides at once, making the drag feel inverted or "laggy".
   // We freeze the frame's *current* on-screen offset as an explicit pixel
+  // margin, using PHYSICAL margin-left/margin-right (never marginInlineStart/
+  // End and never align-items: flex-start/flex-end) — those are direction-
+  // relative and silently flip in an RTL page, which is what made the drag
+  // feel backwards. Setting an explicit margin on one side plus 'auto' on
+  // the other pins that side exactly, regardless of dir, and also overrides
+  // any align-items coming from the align-left/center/right classes.
   if (rootEl && frame) {
     const rootRect = rootEl.getBoundingClientRect()
     const frameRect = frame.getBoundingClientRect()
+    maxWidth = rootRect.width
     if (side === 'right') {
       resizeFrameStyle.value = { marginLeft: `${frameRect.left - rootRect.left}px`, marginRight: 'auto' }
     } else {
@@ -45,7 +53,7 @@ function startResize(side: 'left' | 'right', e: MouseEvent) {
     // Right handle: dragging further right (positive delta) grows the image.
     // Each handle only cares about its own side, regardless of text direction.
     const signedDelta = side === 'left' ? -delta : delta
-    const newWidth = Math.max(80, Math.round(startWidth + signedDelta))
+    const newWidth = Math.max(80, Math.min(maxWidth, Math.round(startWidth + signedDelta)))
     props.updateAttributes({ width: newWidth })
   }
   const onUp = () => {
@@ -104,6 +112,7 @@ function onCaptionInput(e: Event) {
 .img-frame {
   position: relative;
   line-height: 0;
+  max-width: 100%;
 }
 .img-frame img {
   display: block;
