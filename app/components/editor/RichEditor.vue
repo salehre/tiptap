@@ -19,6 +19,7 @@ import PreviewDialog from './dialogs/PreviewDialog.vue'
 import WordCountDialog from './dialogs/WordCountDialog.vue'
 import TablePropertiesDialog from './dialogs/TablePropertiesDialog.vue'
 import ExportCodeDialog from './dialogs/ExportCodeDialog.vue'
+import ResponsiveOrderDialog from './dialogs/ResponsiveOrderDialog.vue'
 import { exportEditorContent, type ExportResult } from '~/utils/exportToFramework'
 import { EXPORT_OPTIONS, type ExportCss, type ExportSyntax } from '~/utils/exportTypes'
 import { normalizePastedHtml } from '~/utils/normalizePastedHtml'
@@ -82,6 +83,7 @@ const embedDialogOpen = ref(false)
 const previewDialogOpen = ref(false)
 const wordCountDialogOpen = ref(false)
 const tablePropertiesOpen = ref(false)
+const responsiveOrderOpen = ref(false)
 const showVisualBlocks = ref(false)
 const showVisualChars = ref(false)
 const exportResult = ref<ExportResult | null>(null)
@@ -214,6 +216,7 @@ function printDocument() {
       @open-word-count="wordCountDialogOpen = true"
       @open-table-properties="tablePropertiesOpen = true"
       @insert-page-break="insertPageBreak"
+      @open-responsive-order="responsiveOrderOpen = true"
       @print="printDocument"
       @toggle-visual-blocks="showVisualBlocks = !showVisualBlocks"
       @toggle-visual-chars="showVisualChars = !showVisualChars"
@@ -235,6 +238,7 @@ function printDocument() {
       @open-preview="previewDialogOpen = true"
       @open-word-count="wordCountDialogOpen = true"
       @insert-page-break="insertPageBreak"
+      @open-responsive-order="responsiveOrderOpen = true"
       @print="printDocument"
       @toggle-visual-blocks="showVisualBlocks = !showVisualBlocks"
       @toggle-visual-chars="showVisualChars = !showVisualChars"
@@ -297,6 +301,11 @@ function printDocument() {
       :result="exportResult"
       :title="exportTitle"
       @close="exportResult = null"
+    />
+    <ResponsiveOrderDialog
+      v-if="responsiveOrderOpen"
+      :editor="editor"
+      @close="responsiveOrderOpen = false"
     />
 
   </v-card>

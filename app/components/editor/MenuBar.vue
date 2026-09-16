@@ -21,6 +21,7 @@ const emit = defineEmits<{
   'open-word-count': []
   'open-table-properties': []
   'insert-page-break': []
+  'open-responsive-order': []
   print: []
   'toggle-visual-blocks': []
   'toggle-visual-chars': []
@@ -132,6 +133,9 @@ function toggleDirection() {
         </v-list-item>
         <v-list-item @click="emit('open-word-count'); close()">
           <v-list-item-title>آمار سند</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="emit('open-responsive-order'); close()">
+          <v-list-item-title>ترتیب واکنش‌گرا</v-list-item-title>
         </v-list-item>
         <v-divider class="my-1" />
         <v-list-item @click="emit('open-source'); close()">

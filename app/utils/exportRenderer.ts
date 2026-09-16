@@ -1,13 +1,22 @@
 import type { PMNode, RenderCtx } from './exportTypes'
 import { el, text, comment } from './exportDom'
 
-// ---------------------------------------------------------------------------
-// All styling below is written as inline `style` objects (never CSS classes,
-// never framework components like <v-img>/<v-row>/<v-checkbox>/...). The
-// output is intentionally identical no matter which css framework option the
-// user picked - it doesn't depend on Tailwind/Bootstrap/Vuetify being
-// installed at all, just plain HTML(-ish) tags with inline styles.
-// ---------------------------------------------------------------------------
+interface OrderValue {
+  sm: number | null
+  md: number | null
+  lg: number | null
+}
+
+function applyOrder(renderedHtml: string, order: OrderValue | undefined, ctx: RenderCtx): string {
+  if (!renderedHtml || !order) return renderedHtml
+  const style: Record<string, string> = {}
+  if (order.sm !== null && order.sm !== undefined) style['--order-sm'] = String(order.sm)
+  if (order.md !== null && order.md !== undefined) style['--order-md'] = String(order.md)
+  if (order.lg !== null && order.lg !== undefined) style['--order-lg'] = String(order.lg)
+  if (!Object.keys(style).length) return renderedHtml
+  ctx.orderUsed.value = true
+  return el('div', { style }, [renderedHtml], ctx)
+}
 
 const CODE_INLINE_STYLE = {
   backgroundColor: '#f3f4f6',
@@ -42,14 +51,14 @@ function renderMarks(inner: string, marks: PMNode['marks'], ctx: RenderCtx): str
         return el('code', { style: CODE_INLINE_STYLE }, [acc], ctx)
       case 'link':
         return el(
-            'a',
-            {
-              href: mark.attrs?.href,
-              target: mark.attrs?.target || undefined,
-              style: LINK_STYLE
-            },
-            [acc],
-            ctx
+          'a',
+          {
+            href: mark.attrs?.href,
+            target: mark.attrs?.target || undefined,
+            style: LINK_STYLE
+          },
+          [acc],
+          ctx
         )
       case 'textStyle': {
         const style: Record<string, string> = {}
@@ -123,28 +132,31 @@ function renderChildren(node: PMNode, ctx: RenderCtx): string[] {
 
 function renderResponsiveEmbed(src: string, ctx: RenderCtx): string {
   return el(
-      'div',
-      { style: { position: 'relative', width: '100%', marginBottom: '16px', aspectRatio: '16/9' } },
-      [
-        el(
-            'iframe',
-            {
-              src,
-              style: { position: 'absolute', inset: '0', width: '100%', height: '100%', border: '0', borderRadius: '8px' },
-              allowfullscreen: true
-            },
-            [],
-            ctx
-        )
-      ],
-      ctx
+    'div',
+    { style: { position: 'relative', width: '100%', marginBottom: '16px', aspectRatio: '16/9' } },
+    [
+      el(
+        'iframe',
+        {
+          src,
+          style: { position: 'absolute', inset: '0', width: '100%', height: '100%', border: '0', borderRadius: '8px' },
+          allowfullscreen: true
+        },
+        [],
+        ctx
+      )
+    ],
+    ctx
   )
 }
 
 export function renderNode(node: PMNode, ctx: RenderCtx): string {
   switch (node.type) {
     case 'doc':
-      return renderChildren(node, ctx).join('\n')
+      return (node.content ?? [])
+        .map((child) => applyOrder(renderNode(child, ctx), child.attrs?.order, ctx))
+        .filter(Boolean)
+        .join('\n')
 
     case 'paragraph':
       return el('p', { style: sty('paragraph') }, renderChildren(node, ctx), ctx)
@@ -167,10 +179,10 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
 
     case 'taskList':
       return el(
-          'ul',
-          { style: { listStyleType: 'none', paddingInlineStart: '0', marginBottom: '16px' } },
-          renderChildren(node, ctx),
-          ctx
+        'ul',
+        { style: { listStyleType: 'none', paddingInlineStart: '0', marginBottom: '16px' } },
+        renderChildren(node, ctx),
+        ctx
       )
 
     case 'taskItem': {
@@ -184,18 +196,18 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
     case 'blockquote': {
       const children = renderChildren(node, ctx)
       return el(
-          'blockquote',
-          {
-            style: {
-              borderInlineStart: '4px solid #d1d5db',
-              paddingInlineStart: '16px',
-              fontStyle: 'italic',
-              color: '#4b5563',
-              margin: '16px 0'
-            }
-          },
-          children,
-          ctx
+        'blockquote',
+        {
+          style: {
+            borderInlineStart: '4px solid #d1d5db',
+            paddingInlineStart: '16px',
+            fontStyle: 'italic',
+            color: '#4b5563',
+            margin: '16px 0'
+          }
+        },
+        children,
+        ctx
       )
     }
 
@@ -203,19 +215,19 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
       const code = extractText(node)
       const codeEl = el('code', {}, [text(code)], ctx)
       return el(
-          'pre',
-          {
-            style: {
-              backgroundColor: '#111827',
-              color: '#f3f4f6',
-              borderRadius: '8px',
-              padding: '16px',
-              overflowX: 'auto',
-              marginBottom: '16px'
-            }
-          },
-          [codeEl],
-          ctx
+        'pre',
+        {
+          style: {
+            backgroundColor: '#111827',
+            color: '#f3f4f6',
+            borderRadius: '8px',
+            padding: '16px',
+            overflowX: 'auto',
+            marginBottom: '16px'
+          }
+        },
+        [codeEl],
+        ctx
       )
     }
 
@@ -230,13 +242,13 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
       const imgAttrs: Record<string, any> = { alt, title, src, style: sty('img') }
       if (width) imgAttrs.width = width
       return el(
-          'figure',
-          { style: { display: 'flex', flexDirection: 'column', alignItems: alignItems(align), marginBottom: '16px' } },
-          [
-            el('img', imgAttrs, [], ctx),
-            caption ? el('figcaption', { style: sty('figcaption') }, [text(caption)], ctx) : ''
-          ].filter(Boolean),
-          ctx
+        'figure',
+        { style: { display: 'flex', flexDirection: 'column', alignItems: alignItems(align), marginBottom: '16px' } },
+        [
+          el('img', imgAttrs, [], ctx),
+          caption ? el('figcaption', { style: sty('figcaption') }, [text(caption)], ctx) : ''
+        ].filter(Boolean),
+        ctx
       )
     }
 
@@ -245,8 +257,8 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
       const headerRows = rows.filter((r) => (r.content ?? []).every((c) => c.type === 'tableHeader'))
       const bodyRows = rows.filter((r) => !(r.content ?? []).every((c) => c.type === 'tableHeader'))
       const theadHtml = headerRows.length
-          ? el('thead', {}, headerRows.map((r) => renderNode(r, ctx)), ctx)
-          : ''
+        ? el('thead', {}, headerRows.map((r) => renderNode(r, ctx)), ctx)
+        : ''
       const tbodyHtml = bodyRows.length ? el('tbody', {}, bodyRows.map((r) => renderNode(r, ctx)), ctx) : ''
       const inner = [theadHtml, tbodyHtml].filter(Boolean)
       return el('table', { style: sty('table') }, inner, ctx)
@@ -272,17 +284,17 @@ export function renderNode(node: PMNode, ctx: RenderCtx): string {
       const columns = node.attrs?.columns ?? 2
       const colHtml = renderChildren(node, ctx)
       return el(
-          'div',
-          {
-            style: {
-              display: 'grid',
-              gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-              gap: '16px',
-              marginBottom: '16px'
-            }
-          },
-          colHtml,
-          ctx
+        'div',
+        {
+          style: {
+            display: 'grid',
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+            gap: '16px',
+            marginBottom: '16px'
+          }
+        },
+        colHtml,
+        ctx
       )
     }
     case 'column':

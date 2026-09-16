@@ -49,6 +49,7 @@ const emit = defineEmits<{
   'open-preview': []
   'open-word-count': []
   'insert-page-break': []
+  'open-responsive-order': []
   print: []
   'toggle-visual-blocks': []
   'toggle-visual-chars': []
@@ -197,6 +198,7 @@ function setLink() {
       @toggle-visual-chars="emit('toggle-visual-chars')"
       @insert-page-break="emit('insert-page-break')"
       @open-word-count="emit('open-word-count')"
+      @open-responsive-order="emit('open-responsive-order')"
     />
     <ExportMenu @export="(syntax, css) => emit('export', syntax, css)" />
 

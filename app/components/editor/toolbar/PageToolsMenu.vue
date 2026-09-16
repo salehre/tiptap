@@ -7,7 +7,8 @@ import {
   Pilcrow,
   SeparatorHorizontal,
   Calculator,
-  LayoutPanelTop
+  LayoutPanelTop,
+  ArrowUpDown
 } from '@lucide/vue'
 import DropdownMenuButton from './DropdownMenuButton.vue'
 
@@ -21,6 +22,7 @@ const emit = defineEmits<{
   'toggle-visual-chars': []
   'insert-page-break': []
   'open-word-count': []
+  'open-responsive-order': []
 }>()
 </script>
 
@@ -56,6 +58,10 @@ const emit = defineEmits<{
       <v-list-item @click="emit('insert-page-break'); close()">
         <template #prepend><SeparatorHorizontal :size="16" class="me-2" /></template>
         <v-list-item-title>درج پایان صفحه</v-list-item-title>
+      </v-list-item>
+      <v-list-item @click="emit('open-responsive-order'); close()">
+        <template #prepend><ArrowUpDown :size="16" class="me-2" /></template>
+        <v-list-item-title>ترتیب واکنش‌گرا</v-list-item-title>
       </v-list-item>
 
       <v-divider class="my-1" />

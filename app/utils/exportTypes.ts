@@ -27,8 +27,6 @@ export const EXPORT_OPTIONS: { syntax: ExportSyntax; label: string; options: Exp
   }
 ]
 
-/** Minimal shape of a Tiptap/ProseMirror JSON node - loose on purpose since
- * our schema has several custom node types with their own attrs. */
 export interface PMNode {
   type: string
   attrs?: Record<string, any>
@@ -40,4 +38,5 @@ export interface PMNode {
 export interface RenderCtx {
   syntax: ExportSyntax
   css: ExportCss
+  orderUsed: { value: boolean }
 }
