@@ -1,8 +1,43 @@
-/**
- * Content styles for the ProseMirror document itself.
- * Uses logical properties (inline-start/end) throughout so the
- * same rules work correctly in both RTL (Persian) and LTR content.
- */
+/* Column layout grid */
+.rte-content .rte-columns {
+  display: grid;
+  grid-template-columns: repeat(var(--rte-columns, 2), 1fr);
+  gap: var(--space-4);
+}
+.rte-content .rte-column {
+  min-width: 0;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  min-height: 40px;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.rte-content .ProseMirror .rte-column:hover,
+.rte-content .ProseMirror .rte-column:focus-within {
+  border-color: rgb(var(--v-theme-primary));
+  background-color: rgba(var(--v-theme-primary), 0.04);
+}
+
+.rte-content .rte-column:has(> p:only-child:empty)::after,
+.rte-content .rte-column:has(> p:only-child > br:only-child)::after {
+  content: 'برای افزودن محتوا کلیک کنید';
+  display: block;
+  padding: 8px 4px;
+  color: var(--ink-300);
+  font-size: 0.85em;
+  pointer-events: none;
+}
+.rte-content .rte-column > *:first-child { margin-block-start: 0; }
+.rte-content .rte-column .rte-figure-view,
+.rte-content .rte-column figure.rte-figure {
+  width: 100%;
+}
+@media (max-width: 560px) {
+  .rte-content .rte-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
 .rte-content .ProseMirror {
   outline: none;
   min-height: 100%;
