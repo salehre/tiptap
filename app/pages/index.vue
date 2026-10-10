@@ -22,7 +22,7 @@ const content = ref(`
         <p class="text-caption text-medium-emphasis mb-2" dir="ltr" style="font-family: var(--font-mono)">
           Nuxt + Tiptap + Vuetify
         </p>
-        <h1 class="text-h3 font-weight-bold mb-3">دوات</h1>
+        <h2 class="text-h3 font-weight-bold mb-3">TipTap</h2>
         <p class="text-body-1 text-medium-emphasis mx-auto" style="max-width: 52ch; line-height: 1.8">
           ادیتور متن غنی، قابل استفاده هم به‌عنوان یک کامپوننت مستقل در پروژه‌های دیگر و هم به‌صورت یک برنامهٔ نوشتاری کامل.
         </p>

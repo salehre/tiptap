@@ -151,8 +151,8 @@ function insertGenericEmbed(url: string) {
 
 function handleExport(syntax: ExportSyntax, css: ExportCss) {
   if (!editor.value) return
-  const json = editor.value.getJSON()
-  exportResult.value = exportEditorContent(json as any, syntax, css)
+  // Export the real rendered DOM (what DevTools > Elements shows), not a re-render of the JSON.
+  exportResult.value = exportEditorContent(editor.value.view.dom as HTMLElement, syntax, css)
   const group = EXPORT_OPTIONS.find((g) => g.syntax === syntax)
   const opt = group?.options.find((o) => o.css === css)
   exportTitle.value = opt ? `خروجی ${opt.label}` : 'خروجی کد'
