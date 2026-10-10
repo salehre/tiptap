@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { PREVIEW_VIEWPORTS, type PreviewViewport } from '../../../composables/usePreviewViewports'
+import tokensCss from '../../../assets/css/tokens.css?raw'
+import editorContentCss from '../../../assets/css/editor-content.css?raw'
 
-defineProps<{ html: string }>()
+const props = defineProps<{ html: string }>()
 const emit = defineEmits<{ close: [] }>()
 
 const viewport = ref<PreviewViewport>('full')
@@ -13,9 +15,51 @@ const FRAME_HEIGHTS: Partial<Record<PreviewViewport, string>> = {
 }
 
 const currentWidth = computed(
-  () => PREVIEW_VIEWPORTS.find((v) => v.value === viewport.value)?.width ?? '100%'
+    () => PREVIEW_VIEWPORTS.find((v) => v.value === viewport.value)?.width ?? '100%'
 )
-const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
+const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? '70vh')
+
+/** The app's @font-face rules (Vazirmatn, ...) so the isolated frame uses the same fonts. */
+function collectFontFaces(): string {
+  const rules: string[] = []
+  for (const sheet of Array.from(document.styleSheets)) {
+    try {
+      for (const rule of Array.from(sheet.cssRules)) {
+        if (rule instanceof CSSFontFaceRule) rules.push(rule.cssText)
+      }
+    } catch {
+      // cross-origin stylesheet - skip
+    }
+  }
+  return rules.join('\n')
+}
+
+// The document is rendered inside an iframe so that:
+//  - CSS shipped with the content (e.g. an HTML block's <style>) cannot leak into the app,
+//  - app/Vuetify CSS cannot leak into the content,
+//  - @media queries react to the simulated device width, like a real page.
+// `sandbox` (without allow-scripts) keeps any pasted <script> from running.
+const srcdoc = computed(
+    () => `<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<base href="${location.origin}/">
+<style>${collectFontFaces()}</style>
+<style>${tokensCss}</style>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: var(--font-ui); font-size: 15px; line-height: 1.6; background: #fff; }
+</style>
+<style>${editorContentCss}</style>
+</head>
+<body>
+<div class="rte-content"><div class="ProseMirror">${props.html}</div></div>
+</body>
+</html>`
+)
 </script>
 
 <template>
@@ -23,13 +67,13 @@ const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
     <v-card title="پیش‌نمایش سند">
       <v-card-text class="viewport-bar pb-0">
         <v-btn
-          v-for="v in PREVIEW_VIEWPORTS"
-          :key="v.value"
-          :variant="viewport === v.value ? 'flat' : 'tonal'"
-          :color="viewport === v.value ? 'primary' : undefined"
-          size="small"
-          class="me-2"
-          @click="viewport = v.value"
+            v-for="v in PREVIEW_VIEWPORTS"
+            :key="v.value"
+            :variant="viewport === v.value ? 'flat' : 'tonal'"
+            :color="viewport === v.value ? 'primary' : undefined"
+            size="small"
+            class="me-2"
+            @click="viewport = v.value"
         >
           <component :is="v.icon" :size="16" class="me-1" />
           {{ v.title }}
@@ -38,14 +82,13 @@ const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
 
       <v-card-text class="preview-body">
         <div class="preview-frame" :class="`vp-${viewport}`" :style="{ width: currentWidth }">
-          <div
-            class="device-screen"
-            :style="currentHeight ? { height: currentHeight, overflowY: 'auto' } : undefined"
-          >
-            <div class="rte-content">
-              <div class="ProseMirror" v-html="html" />
-            </div>
-          </div>
+          <iframe
+              class="device-screen"
+              title="پیش‌نمایش"
+              sandbox="allow-same-origin"
+              :srcdoc="srcdoc"
+              :style="{ height: currentHeight }"
+          />
         </div>
       </v-card-text>
       <v-card-actions>
@@ -81,22 +124,14 @@ const currentHeight = computed(() => FRAME_HEIGHTS[viewport.value] ?? null)
   overflow: hidden;
 }
 .device-screen {
-  /* isolates its own scroll so mobile/tablet frames behave like a real
-     device viewport instead of growing with the page */
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-}
-.rte-content {
-  background: rgb(var(--v-theme-surface));
+  display: block;
+  width: 100%;
+  border: 0;
+  background: #fff;
   border-radius: 8px;
 }
-.vp-sm .rte-content,
-.vp-md .rte-content {
+.vp-sm .device-screen,
+.vp-md .device-screen {
   border-radius: 0;
-}
-.vp-full .rte-content {
-  max-width: 760px;
-  margin-inline: auto;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 8px 24px -12px rgba(0, 0, 0, 0.16);
 }
 </style>

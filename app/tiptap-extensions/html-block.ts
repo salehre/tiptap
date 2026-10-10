@@ -12,18 +12,38 @@ export interface HtmlBlockOptions {
  *
  * Without this, TipTap silently "unwraps" any <div> it doesn't recognise:
  * the wrapper and its style/class attributes are dropped and only the text
- * inside recognised child tags (p, h3, ...) survives. That's why pasted or
- * source-code HTML built from decorative <div>s loses its colors, boxes and
- * layout even though the plain-text formatting (bold, heading color, etc.)
- * keeps working.
+ * inside recognised child tags (p, h3, ...) survives.
  *
  * This node captures the *outer* <div> (style or class present) verbatim as
- * an opaque, non-text-editable block, rendered via innerHTML so it looks
- * exactly like the original markup. Trade-off: text inside such a block can
- * no longer be edited inline through the rich-text tools — it can only be
- * selected, moved or deleted as a whole. Nested <div>s inside it are not
- * parsed separately; they're part of the captured HTML string.
+ * an opaque, non-text-editable block. Companion <style> tags and <svg>
+ * sprites are stored INSIDE that div's markup (see normalizePastedHtml), so
+ * the block carries its own CSS.
+ *
+ * In the editor the block is rendered inside a Shadow DOM so that
+ *  - the block's CSS (class selectors, `:root`/`body` rules, `*` resets...)
+ *    cannot leak into the editor UI, and
+ *  - the editor/Vuetify CSS cannot leak into the block.
+ * `getHTML()` still returns plain light-DOM markup (style tag included).
  */
+
+/** Inside a shadow tree `:root` / `html` / `body` never match - map them to the host. */
+function scopeCssToHost(css: string): string {
+    return css.replace(/(^|[,{}\s])(:root|html|body)(?=[\s,{.:#\[>+~]|$)/g, '$1:host')
+}
+
+function renderIntoShadow(host: HTMLElement, html: string) {
+    const root = host.shadowRoot ?? host.attachShadow({ mode: 'open' })
+    const tpl = document.createElement('template')
+    tpl.innerHTML = html
+    tpl.content.querySelectorAll('script').forEach((s) => s.remove())
+    tpl.content.querySelectorAll('style').forEach((s) => {
+        s.textContent = scopeCssToHost(s.textContent || '')
+    })
+    const base = document.createElement('style')
+    base.textContent = ':host { display: block; }'
+    root.replaceChildren(base, tpl.content)
+}
+
 export const HtmlBlock = Node.create<HtmlBlockOptions>({
     name: 'htmlBlock',
     group: 'block',
@@ -66,13 +86,9 @@ export const HtmlBlock = Node.create<HtmlBlockOptions>({
     },
 
     renderHTML({ node, HTMLAttributes }) {
-        // IMPORTANT: getHTML()/serialization uses this method, NOT addNodeView
-        // (that's only for the live editable view). Returning a plain array
-        // spec here has no way to inject an arbitrary raw HTML subtree, so we
-        // return a real DOM Element instead — ProseMirror's DOMOutputSpec
-        // explicitly allows an Element, and the serializer uses it as-is.
+        // getHTML()/serialization uses this method, NOT addNodeView.
+        // Returning a real DOM Element is allowed by ProseMirror's DOMOutputSpec.
         if (typeof document === 'undefined') {
-            // SSR fallback: no DOM available to build a real element from.
             return ['div', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, { 'data-html-block': 'true' })]
         }
         const dom = document.createElement('div')
@@ -88,8 +104,20 @@ export const HtmlBlock = Node.create<HtmlBlockOptions>({
             const dom = document.createElement('div')
             dom.setAttribute('data-html-block', 'true')
             dom.contentEditable = 'false'
-            dom.innerHTML = node.attrs.html
-            return { dom }
+            // Original (un-scoped) markup, read by the framework export.
+            ;(dom as any).__rteHtml = node.attrs.html
+            renderIntoShadow(dom, node.attrs.html || '')
+
+            return {
+                dom,
+                update: (updated) => {
+                    if (updated.type.name !== 'htmlBlock') return false
+                        ;(dom as any).__rteHtml = updated.attrs.html
+                    renderIntoShadow(dom, updated.attrs.html || '')
+                    return true
+                },
+                ignoreMutation: () => true
+            }
         }
     },
 

@@ -103,13 +103,82 @@ function wrapInlineStylesInSpans(el: Element): void {
     el.appendChild(wrapper)
 }
 
+/* ---------------------------------------------------------------------------
+ * HTML blocks (styled <div> pages / cards) must reach the editor EXACTLY as
+ * written. The normalisation above inlines computed text styles and wraps
+ * element contents in <span>s, which breaks such markup (spans around block
+ * elements, <use> pulled out of <svg>, ...). So these blocks are swapped for
+ * placeholders before normalising and restored afterwards. Their companion
+ * <style> tags and top-level <svg> sprites (which ProseMirror would otherwise
+ * silently drop) are moved INSIDE the first block so the CSS survives.
+ * ------------------------------------------------------------------------- */
+
+const KEEP_ATTR = 'data-rte-keep'
+const NOT_HTML_BLOCK_ATTRS = ['data-youtube-video', 'data-iframe-embed', 'data-page-break']
+
+function isHtmlBlockRoot(el: Element): boolean {
+    if (el.tagName !== 'DIV') return false
+    if (el.hasAttribute('data-html-block')) return true
+    if (NOT_HTML_BLOCK_ATTRS.some((a) => el.hasAttribute(a))) return false
+    if (Array.from(el.classList).some((c) => c.startsWith('rte-'))) return false
+    return el.hasAttribute('style') || el.hasAttribute('class')
+}
+
+function findHtmlBlockRoots(parent: Element, out: Element[]) {
+    for (const child of Array.from(parent.children)) {
+        if (isHtmlBlockRoot(child)) out.push(child)
+        else if (child.tagName === 'DIV') findHtmlBlockRoots(child, out)
+    }
+}
+
+function extractHtmlBlocks(html: string): { shell: string; kept: string[] } | null {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const roots: Element[] = []
+    findHtmlBlockRoots(doc.body, roots)
+    if (!roots.length) return null
+
+    const inside = (el: Element) => roots.some((r) => r !== el && r.contains(el))
+
+    // Companion CSS / SVG sprites living outside the blocks (head or body level).
+    const companions: Element[] = [
+        ...Array.from(doc.querySelectorAll('style')).filter((s) => !inside(s)),
+        ...Array.from(doc.body.children).filter((c) => c.tagName.toLowerCase() === 'svg')
+    ].filter((el) => !roots.includes(el))
+    const companionHtml = companions.map((c) => c.outerHTML).join('\n')
+    companions.forEach((c) => c.remove())
+
+    if (companionHtml) roots[0].insertAdjacentHTML('afterbegin', companionHtml)
+
+    const kept: string[] = []
+    roots.forEach((root, i) => {
+        kept.push(root.outerHTML)
+        const placeholder = doc.createElement('div')
+        placeholder.setAttribute(KEEP_ATTR, String(i))
+        root.replaceWith(placeholder)
+    })
+    return { shell: doc.body.innerHTML, kept }
+}
+
+function restoreHtmlBlocks(html: string, kept: string[]): string {
+    return html.replace(
+        new RegExp(`<div ${KEEP_ATTR}="(\\d+)"[^>]*></div>`, 'g'),
+        (_, i) => kept[Number(i)] ?? ''
+    )
+}
+
+function normalizeCore(html: string): string {
+    const withInlineStyles = resolveComputedStylesToInline(html)
+    const doc = new DOMParser().parseFromString(withInlineStyles, 'text/html')
+    Array.from(doc.body.children).forEach((child) => wrapInlineStylesInSpans(child))
+    return doc.body.innerHTML
+}
+
 export function normalizePastedHtml(html: string): string {
     if (typeof window === 'undefined' || typeof DOMParser === 'undefined') return html
     try {
-        const withInlineStyles = resolveComputedStylesToInline(html)
-        const doc = new DOMParser().parseFromString(withInlineStyles, 'text/html')
-        Array.from(doc.body.children).forEach((child) => wrapInlineStylesInSpans(child))
-        return doc.body.innerHTML
+        const extracted = extractHtmlBlocks(html)
+        if (!extracted) return normalizeCore(html)
+        return restoreHtmlBlocks(normalizeCore(extracted.shell), extracted.kept)
     } catch {
         return html
     }

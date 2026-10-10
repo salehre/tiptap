@@ -25,7 +25,7 @@ const VOID_TAGS = new Set([
 // changing how the browser lays them out.
 const BLOCK_TAGS = new Set([
   'address', 'article', 'aside', 'blockquote', 'colgroup', 'col', 'dd', 'div', 'dl', 'dt', 'figcaption',
-  'figure', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'ol', 'p', 'pre', 'section',
+  'figure', 'footer', 'main', 'nav', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'hr', 'li', 'ol', 'p', 'pre', 'section',
   'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'ul', 'label'
 ])
 
@@ -228,7 +228,9 @@ function serializeAttrs(el: Element, syntax: ExportSyntax): string {
         continue
       }
       const lower = name.toLowerCase()
-      const jsxName = REACT_ATTR_MAP[lower] ?? name
+      let jsxName = REACT_ATTR_MAP[lower] ?? name
+      if (lower === 'xlink:href') jsxName = 'xlinkHref'
+      else if (!REACT_ATTR_MAP[lower] && name.includes('-') && !/^(data|aria)-/.test(name)) jsxName = camel(name)
       if (BOOLEAN_ATTRS.has(lower) && (value === '' || value === lower)) {
         parts.push(jsxName)
       } else {
@@ -245,8 +247,10 @@ function serializeAttrs(el: Element, syntax: ExportSyntax): string {
   return parts.length ? ' ' + parts.join(' ') : ''
 }
 
-function serializeText(value: string, syntax: ExportSyntax): string {
+function serializeText(value: string, syntax: ExportSyntax, preserve: boolean): string {
   if (syntax === 'react') {
+    // Whitespace-only text containing a line break is dropped by JSX anyway.
+    if (!preserve && !value.trim() && /[\n\r]/.test(value)) return ''
     // Anything JSX would reinterpret or whitespace-collapse is emitted as a JS string.
     if (/[{}\n\r\t]|^\s|\s$|\s{2,}/.test(value)) return `{${JSON.stringify(value)}}`
     return escapeText(value)
@@ -258,7 +262,7 @@ function serializeText(value: string, syntax: ExportSyntax): string {
 const INDENT = '  '
 
 function serializeNode(node: Node, syntax: ExportSyntax, depth: number, preserve: boolean): string {
-  if (node.nodeType === Node.TEXT_NODE) return serializeText(node.textContent ?? '', syntax)
+  if (node.nodeType === Node.TEXT_NODE) return serializeText(node.textContent ?? '', syntax, preserve)
   if (node.nodeType !== Node.ELEMENT_NODE) return ''
 
   const el = node as Element
@@ -273,7 +277,8 @@ function serializeNode(node: Node, syntax: ExportSyntax, depth: number, preserve
   const keepWhitespace = preserve || tag === 'pre' || tag === 'textarea'
 
   const meaningful = childNodes.filter(
-      (c) => !(c.nodeType === Node.TEXT_NODE && !(c.textContent ?? '').trim())
+      (c) =>
+          c.nodeType !== Node.COMMENT_NODE && !(c.nodeType === Node.TEXT_NODE && !(c.textContent ?? '').trim())
   )
   const canPretty =
       !keepWhitespace &&
@@ -328,8 +333,8 @@ const IMAGE_FIGURE_CSS = `
   max-width: 100%;
 }`
 
-function buildCss(): string {
-  return [tokensCss, editorContentCss, IMAGE_FIGURE_CSS]
+function buildCss(extra: string[] = []): string {
+  return [tokensCss, editorContentCss, IMAGE_FIGURE_CSS, ...extra]
       .map((c) => c.replace(/\/\*[\s\S]*?\*\//g, '').trim())
       .filter(Boolean)
       .join('\n\n')
@@ -343,9 +348,26 @@ function escapeForTemplateLiteral(css: string): string {
  * Public API
  * ----------------------------------------------------------------------- */
 
-function buildExportRoot(editorDom: HTMLElement): HTMLElement {
+function buildExportRoot(editorDom: HTMLElement): { root: HTMLElement; blockCss: string[] } {
   const clone = editorDom.cloneNode(true) as HTMLElement
   cleanTree(clone)
+
+  // HTML blocks render inside a Shadow DOM (not copied by cloneNode), so put
+  // their original markup back - untouched, after cleaning. Their <style>
+  // tags are hoisted into the shipped CSS (a <style> inside a Vue template is
+  // ignored by the compiler, and JSX would need it escaped).
+  const blockCss: string[] = []
+  const origBlocks = Array.from(editorDom.querySelectorAll('[data-html-block]'))
+  const cloneBlocks = Array.from(clone.querySelectorAll('[data-html-block]'))
+  cloneBlocks.forEach((block, i) => {
+    const html = (origBlocks[i] as any)?.__rteHtml as string | undefined
+    if (html !== undefined) block.innerHTML = html
+  })
+  clone.querySelectorAll('[data-html-block] script').forEach((s) => s.remove())
+  clone.querySelectorAll('[data-html-block] style').forEach((st) => {
+    blockCss.push(st.textContent ?? '')
+    st.remove()
+  })
 
   // The root keeps only what DevTools shows without the editing state.
   for (const attr of Array.from(clone.attributes)) {
@@ -353,7 +375,7 @@ function buildExportRoot(editorDom: HTMLElement): HTMLElement {
   }
   const rootClasses = Array.from(clone.classList).filter((c) => c === 'tiptap' || c === 'ProseMirror')
   clone.setAttribute('class', rootClasses.join(' ') || 'ProseMirror')
-  return clone
+  return { root: clone, blockCss }
 }
 
 export function exportEditorContent(
@@ -361,8 +383,8 @@ export function exportEditorContent(
     syntax: ExportSyntax,
     _css: ExportCss
 ): ExportResult {
-  const root = buildExportRoot(editorDom)
-  const css = buildCss()
+  const { root, blockCss } = buildExportRoot(editorDom)
+  const css = buildCss(blockCss)
 
   const notes = [
     'کد دقیقاً از DOM زندهٔ ادیتور (همان چیزی که در Elements مرورگر دیده می‌شود) ساخته شده؛ فقط ویژگی‌های مخصوص ویرایش (contenteditable، placeholder، کلاس‌های انتخاب/فوکوس، دستگیره‌های تغییر اندازه) حذف شده‌اند.',
